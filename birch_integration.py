@@ -6,7 +6,6 @@ def extract_first_8_chars(recipe):
 def main():
 
 
-    target_output=pd.read_excel('recipe_to_load.xlsx')
 
     b_r_birch=pd.read_excel('beverage_recipe_birchstreet.xlsx',header=5)
     b_r_birch = b_r_birch[b_r_birch['Recipe type'] == 'Recipe']
