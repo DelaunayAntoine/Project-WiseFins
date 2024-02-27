@@ -632,8 +632,8 @@ def main():
     
     # #path for manual data
     manual_excel_files = [
-        "data\\20231207_client_data\\recipe manual input on excel\\Test\\chef_manual_recipe_conversion_hotel1.xlsx",
-        "data\\20231207_client_data\\recipe manual input on excel\\Test\\chef_manual_recipe_pizza_hotel1.xlsx",
+        "data\\20231207_client_data\\recipe manual input on excel\\Hotel 1\\chef_manual_recipe_conversion_hotel1.xlsx",
+        "data\\20231207_client_data\\recipe manual input on excel\\Hotel 1\\chef_manual_recipe_pizza_hotel1.xlsx",
     ]
     # paths for iscala
     file_iscala_paths = ['data\\20231207_client_data\\export from Purchasing software\\ISCALA (Hotel 2)\\food_recipe_iscala.xlsx', 
