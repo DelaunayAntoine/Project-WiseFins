@@ -1,12 +1,11 @@
 import pandas as pd
 import numpy as np
+
 def extract_first_8_chars(recipe):
     return recipe[:8]
 def extract_last_8_chars(recipe):
     return recipe[-8:]
 def main():
-
-
 
     b_r_birch=pd.read_excel('beverage_recipe_birchstreet.xlsx',header=5)
     b_r_birch = b_r_birch[b_r_birch['Recipe type'] == 'Recipe']
