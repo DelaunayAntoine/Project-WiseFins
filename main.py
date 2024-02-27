@@ -1,6 +1,7 @@
 import pandas as pd 
 import json
 import numpy as np
+from fuzzywuzzy import process
 from datetime import datetime
 from datetime import time
 
@@ -476,19 +477,50 @@ def create_excel_checkscm_ingre_from_json_file(json_file_path, output_excel_path
     # Save the DataFrame to an Excel file
     df.to_excel(output_excel_path, index=False)
 
-def create_excel_checkscm_recipe_from_json_file(json_file_path, output_excel_path):
+def convert_price_to_float(price_str):
+    try:
+        return float(price_str.replace(',', '').replace('R', ''))
+    except ValueError:
+        return 0.0
+
+def get_closest_match(class_name, description, choices, match_cache):
+    combined_name = f"{class_name} {description}"
+    if combined_name in match_cache:
+        return match_cache[combined_name]
+    else:
+        match = process.extractOne(combined_name, choices, scorer=process.fuzz.token_sort_ratio)
+        match_cache[combined_name] = match
+        return match
+
+
+def create_excel_checkscm_recipe_from_json_file(json_file_path, output_excel_path,agb_excel_path):
+    # Load the AGB data from the Excel file
+    agb_df = pd.read_excel(agb_excel_path, engine='openpyxl')
+
     # Load JSON data from the file
     with open(json_file_path, 'r') as file:
         json_data = json.load(file)
 
     # Initialize an empty list to store the DataFrame rows
     rows = []
+    
+    # Initialize a cache for the fuzzy matches
+    match_cache = {}
+
+    # Get the list of choices for fuzzy matching just once
+    choices = agb_df['LCI Name'].tolist()
 
     # Loop through each entry in the JSON data and create a row for each ingredient
     for item in json_data:
-        # Determine if the item is food or beverage based on the first letter of the name
         first_letter = item['Recipe Group'].strip()[0].upper()
         recipe_group = 'food' if first_letter == 'F' else 'beverage' if first_letter == 'B' else 'other'
+
+        # Get the closest match for ingredient name from the AGB DataFrame
+        closest_match = get_closest_match(item['Class'], item['Recipe Description'], choices, match_cache)
+        agb_code = agb_df.loc[agb_df['LCI Name'] == closest_match[0], 'Code\nAGB'].values[0]
+        cat_name = agb_df.loc[agb_df['LCI Name'] == closest_match[0], 'WiseFins EN Category'].values[0]
+        subcat_name = agb_df.loc[agb_df['LCI Name'] == closest_match[0], 'WiseFins EN Subcategory'].values[0]
+
         row = {
                 'resto': 'Checkscm',
                 'subRecipe': item['Class'],
@@ -496,7 +528,7 @@ def create_excel_checkscm_recipe_from_json_file(json_file_path, output_excel_pat
                 'recipeGroupParent': recipe_group,
                 'recipeName': item['Recipe Description'].strip(),
                 'recipeCompose': '',
-                'AGBCode': '',
+                'AGBCode': agb_code,
                 'Quantity':'' ,
                 'cost': item['Total Cost'],
                 'InventoryCode': item['Recipe Number'],
@@ -506,9 +538,10 @@ def create_excel_checkscm_recipe_from_json_file(json_file_path, output_excel_pat
                 'statut': item['Status'],
                 'photo': '',
                 'selling': item['Suggested Selling Price'],
-                'category': '',
-                'subcategory': ''
-        }
+                'category': cat_name,
+                'subcategory': subcat_name
+            }
+
         rows.append(row)
 
     # Convert the list of rows to a DataFrame
@@ -608,6 +641,8 @@ def main():
     transform_file = "data\menu_sales_analysis_pos.xlsx"
     output_transform_file = "data_converted\\transform\\output_menu_sales_analysis_transformed.xlsx"
 
+    agb_file = 'data\\Agribalyse 2023 3.1 with WiseFins categorisation.xlsx'
+
 
     ######################################################################################################
     ##                                          Appel de fonction                                       ##
@@ -640,7 +675,7 @@ def main():
         create_excel_checkscm_ingre_from_json_file(json_path, excel_path)
 
     for json_path, excel_path in zip(input_checkscm_recipe_json_files, excel_checkscm_recipe_files):
-        create_excel_checkscm_recipe_from_json_file(json_path, excel_path)
+        create_excel_checkscm_recipe_from_json_file(json_path, excel_path,agb_file)
     
 
     for json_path, excel_path in zip(input_manual_json_files, excel_output_manual_files):
@@ -652,7 +687,7 @@ def main():
         'data\\20231207_client_data\\export from Purchasing software\\BIRCHSTREET (Hotel 1)\\beverage_recipe_birchstreet.xlsx',
         'data\\20231207_client_data\\export from Purchasing software\BIRCHSTREET (Hotel 1)\\ingredient_masterlist_birchsreet.xlsx',
         'data\\20231207_client_data\\export from Purchasing software\BIRCHSTREET (Hotel 1)\\birchstreet_reference_files\\Copy of Category_ingredient_BirchStreet.xlsx',
-        'data\\Agribalyse 2023 3.1 with WiseFins categorisation.xlsx',
+        agb_file,
         'data_converted\\transform\\output_menu_sales_analysis_transformed.xlsx',
         'data_output\\birchstreet\\output_birchstreet.xlsx'
     )
