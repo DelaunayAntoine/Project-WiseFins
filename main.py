@@ -330,6 +330,55 @@ def convert_price_to_float(price_str):
     return float(price_str.replace(',', ''))
 
 
+def create_excel_manual_from_json_file(json_file_path, output_excel_path):
+    # Load JSON data from the file
+    with open(json_file_path, 'r') as file:
+        json_data = json.load(file)
+
+    # Initialize an empty list to store the DataFrame rows
+    rows = []
+
+    # Loop through each entry in the JSON data and create a row for each ingredient
+    for item in json_data:
+        # Determine if the item is food or beverage based on the first letter of the name
+        first_letter = item['Name'].strip()[0].upper()
+        recipe_group = 'food' if first_letter == 'F' else 'beverage' if first_letter == 'B' else 'other'
+
+        for ingredient in item['Ingredient']:
+            
+            cost = item['Sell Price with Tax'] if item['Cost%'] == 0 else item['Sell Price with Tax'] * item['Cost%']
+
+            # Create a dictionary for the row
+            row = {
+                'resto': 'Manual',
+                'subRecipe': '',
+                'recipeGroup': recipe_group,
+                'recipeGroupParent': '',
+                'recipeName': item['Name'].strip(),
+                'recipeCompose': ingredient['Nom'],
+                'AGBCode': '',
+                'Quantity': ingredient['Quantity'],
+                'cost': cost,
+                'InventoryCode': ingredient['code'],
+                'unit': ingredient['Unit'],
+                'quantityAfter': '',
+                'portion': 1,
+                'statut': '',
+                'photo': '',
+                'selling': item['Sell Price with Tax'],
+                'category': '',
+                'subcategory': ''
+            }
+
+            # Append the row dictionary to the rows list
+            rows.append(row)
+
+    # Convert the list of rows to a DataFrame
+    df = pd.DataFrame(rows)
+
+    # Save the DataFrame to an Excel file
+    df.to_excel(output_excel_path, index=False)
+
 def create_excel_from_json_file(json_file_path, output_excel_path):
     # Load JSON data from the file
     with open(json_file_path, 'r') as file:
@@ -386,90 +435,95 @@ def create_excel_from_json_file(json_file_path, output_excel_path):
     # Save the DataFrame to an Excel file
     df.to_excel(output_excel_path, index=False)
 
-# Paths to the Excel files
-# paths for birchstreet
-# beverage_birchstreet_path = 'data\\20231207_client_data\\export from Purchasing software\\BIRCHSTREET (Hotel 1)\\beverage_recipe_birchstreet.xlsx'
-# ingredient_birchstreet_path = 'data\\20231207_client_data\\export from Purchasing software\BIRCHSTREET (Hotel 1)\\ingredient_masterlist_birchsreet.xlsx'
-# # paths for checkscm
-# beverage_checkscm_path = 'data\\20231207_client_data\\export from Purchasing software\\CHECKSCM (Hotel 3)\\beverage_ingredient_masterlist_checkscm.xlsx'
-# ingredient_checkscm_path = 'data\\20231207_client_data\\export from Purchasing software\\CHECKSCM (Hotel 3)\\food_ingredient_masterlist_checkscm.xlsx'
-# recipe_checkscm_path = 'data\\20231207_client_data\\export from Purchasing software\\CHECKSCM (Hotel 3)\\food_recipe_checkscm.xlsx'
+def create_excel_checkscm_ingre_from_json_file(json_file_path, output_excel_path):
+    # Load JSON data from the file
+    with open(json_file_path, 'r') as file:
+        json_data = json.load(file)
 
-# #path for manual data
-# manual_excel_files = [
-#     "data\\20231207_client_data\\recipe manual input on excel\\Test\\chef_manual_recipe_conversion_hotel1.xlsx",
-#     "data\\20231207_client_data\\recipe manual input on excel\\Test\\chef_manual_recipe_pizza_hotel1.xlsx",
-# ]
-# output_manual_excel_files = [
-#                              "data_converted\\manual\\chef_manual_recipe_conversion_hotel1.json", 
-#                              "data_converted\\manual\\chef_manual_recipe_pizza_hotel1.json"
-# ]
+    # Initialize an empty list to store the DataFrame rows
+    rows = []
 
-# # Output paths for the JSON files
-# # output paths for birchstreet
-# output_json_birchstreet_beverage_path = 'data_converted\\birchstreet\\beverage_recipe_birchstreet.json'
-# output_json_birchstreet_ingredient_path = 'data_converted\\birchstreet\ingredient_masterlist_birchstreet.json'
-# # output paths for checkscm
-# output_json_checkscm_beverage_path = 'data_converted\\checkscm\\beverage_ingredient_masterlist_checkscm.json'
-# output_json_checkscm_ingredient_path = 'data_converted\\checkscm\\food_ingredient_masterlist_checkscm.json'
-# output_json_checkscm_recipe_path = 'data_converted\\checkscm\\food_recipe_checkscm.json'
+    # Loop through each entry in the JSON data and create a row for each ingredient
+    for item in json_data:
+        # Determine if the item is food or beverage based on the first letter of the name
+        first_letter = item['Department'].strip()[0].upper()
+        recipe_group = 'food' if first_letter == 'F' else 'beverage' if first_letter == 'B' else 'other'
+        row = {
+                'resto': 'Checkscm',
+                'subRecipe': item['Type'],
+                'recipeGroup': item['Group'],
+                'recipeGroupParent': recipe_group,
+                'recipeName': item['Product Description'].strip(),
+                'recipeCompose': '',
+                'AGBCode': '',
+                'Quantity': '',
+                'cost': item['Avg. Price'],
+                'InventoryCode': item['Product'],
+                'unit': item['Stock Size'],
+                'quantityAfter': '',
+                'portion': 1,
+                'statut': '',
+                'photo': '',
+                'selling': '',
+                'category': '',
+                'subcategory': ''
+        }
+        rows.append(row)
 
-# # paths for iscala
-# file_iscala_paths = ['data\\20231207_client_data\\export from Purchasing software\\ISCALA (Hotel 2)\\food_recipe_iscala.xlsx', 
-#               'data\\20231207_client_data\\export from Purchasing software\ISCALA (Hotel 2)\\beverage_recipe_iscala.xlsx',
-#                 'data\\20231207_client_data\\export from Purchasing software\\ISCALA (Hotel 2)\\conversion_recipe_iscala.xlsx']
+    # Convert the list of rows to a DataFrame
+    df = pd.DataFrame(rows)
 
+    # Save the DataFrame to an Excel file
+    df.to_excel(output_excel_path, index=False)
 
-# # output paths for iscala
-# output_file__iscala_paths = ["data_converted\\iscala\\food_recipe_iscala.json", 
-#                              "data_converted\\iscala\\beverage_recipe_iscala.json", 
-#                              "data_converted\\iscala\\conversion_recipe_iscala.json"]
-# # convert_iscala_excel_to_json(file_iscala_paths,output_file__iscala_paths)
-# json_file_iscala_paths = [
-#     #"data_converted\\iscala\\food_recipe_iscala.json", 
-#     "data_converted\\iscala\\beverage_recipe_iscala.json",
-# ]
-# excel_output_iscala_paths = [
-#     #'data_output\\iscala\\food_recipe_iscala.xlsx',
-#     'data_output\\iscala\\beverage_recipe_iscala.xlsx',
-# ]
+def create_excel_checkscm_recipe_from_json_file(json_file_path, output_excel_path):
+    # Load JSON data from the file
+    with open(json_file_path, 'r') as file:
+        json_data = json.load(file)
 
-# for json_path, excel_path in zip(json_file_iscala_paths, excel_output_iscala_paths):
-#     create_excel_from_json_file(json_path, excel_path)
+    # Initialize an empty list to store the DataFrame rows
+    rows = []
 
+    # Loop through each entry in the JSON data and create a row for each ingredient
+    for item in json_data:
+        # Determine if the item is food or beverage based on the first letter of the name
+        first_letter = item['Recipe Group'].strip()[0].upper()
+        recipe_group = 'food' if first_letter == 'F' else 'beverage' if first_letter == 'B' else 'other'
+        row = {
+                'resto': 'Checkscm',
+                'subRecipe': item['Class'],
+                'recipeGroup': item['Recipe Type'],
+                'recipeGroupParent': recipe_group,
+                'recipeName': item['Recipe Description'].strip(),
+                'recipeCompose': '',
+                'AGBCode': '',
+                'Quantity':'' ,
+                'cost': item['Total Cost'],
+                'InventoryCode': item['Recipe Number'],
+                'unit': item['Serve Size'],
+                'quantityAfter': '',
+                'portion': item['No. of Serve'],
+                'statut': item['Status'],
+                'photo': '',
+                'selling': item['Suggested Selling Price'],
+                'category': '',
+                'subcategory': ''
+        }
+        rows.append(row)
 
-# #BirchStreet File
+    # Convert the list of rows to a DataFrame
+    df = pd.DataFrame(rows)
 
+    # Save the DataFrame to an Excel file
+    df.to_excel(output_excel_path, index=False)
 
-# transform_file = "data\menu_sales_analysis_pos.xlsx"
-# output_transform_file = "data_converted\\transform\\output_menu_sales_analysis_transformed.xlsx"
-
-# # Identified header row indices for both files
-# header_row_index_beverage = 5  
-# header_row_index_ingredient = 0  
-
-# # Calling the function to convert both Excel files to CSV
-# convert_birchstreet_excel_to_json(beverage_birchstreet_path, ingredient_birchstreet_path, 
-#                           output_json_birchstreet_beverage_path, output_json_birchstreet_ingredient_path, 
-#                           header_row_index_beverage, header_row_index_ingredient)
-
-# convert_checkscm_excel_to_json(beverage_checkscm_path,ingredient_checkscm_path,recipe_checkscm_path,
-#                               output_json_checkscm_beverage_path,output_json_checkscm_ingredient_path,output_json_checkscm_recipe_path)
-
-# process_manual_files(manual_excel_files, output_manual_excel_files)
-
-# transform(transform_file,output_transform_file)
-
-# process_birchstreet_files(
-#     'data\\20231207_client_data\\export from Purchasing software\\BIRCHSTREET (Hotel 1)\\beverage_recipe_birchstreet.xlsx',
-#     'data\\20231207_client_data\\export from Purchasing software\BIRCHSTREET (Hotel 1)\\ingredient_masterlist_birchsreet.xlsx',
-#     'data\\20231207_client_data\\export from Purchasing software\BIRCHSTREET (Hotel 1)\\birchstreet_reference_files\\Copy of Category_ingredient_BirchStreet.xlsx',
-#     'data\\Agribalyse 2023 3.1 with WiseFins categorisation.xlsx',
-#     'data_converted\\transform\\output_menu_sales_analysis_transformed.xlsx',
-#     'data_output\\birchstreetoutput_birchstreet.xlsx'
-# )
 
 def main():
+
+    ######################################################################################################
+    ##                             Récupération des fichiers dans les répertoires                       ##
+    #######################################################################################################
+
     # paths for birchstreet
     beverage_birchstreet_path = 'data\\20231207_client_data\\export from Purchasing software\\BIRCHSTREET (Hotel 1)\\beverage_recipe_birchstreet.xlsx'
     ingredient_birchstreet_path = 'data\\20231207_client_data\\export from Purchasing software\BIRCHSTREET (Hotel 1)\\ingredient_masterlist_birchsreet.xlsx'
@@ -512,7 +566,7 @@ def main():
                              "data_converted\\iscala\\conversion_recipe_iscala.json"]
     
 
-    convert_iscala_excel_to_json(file_iscala_paths,output_file__iscala_paths)
+    
 
     json_file_iscala_paths = [
         #"data_converted\\iscala\\food_recipe_iscala.json", 
@@ -523,13 +577,42 @@ def main():
         'data_output\\iscala\\beverage_recipe_iscala.xlsx',
     ]
 
-    for json_path, excel_path in zip(json_file_iscala_paths, excel_output_iscala_paths):
-        create_excel_from_json_file(json_path, excel_path)
+    input_manual_json_files = [
+                                #  "data_converted\\manual\\chef_manual_recipe_conversion_hotel1.json", 
+                                 "data_converted\\manual\\chef_manual_recipe_pizza_hotel1.json"
+    ]
+
+    excel_output_manual_files = [
+                                #  "data_output\\manual\\chef_manual_recipe_conversion_hotel1.xlsx", 
+                                 "data_output\\manual\\chef_manual_recipe_pizza_hotel1.xlsx"
+    ]
+
+    input_checkscm_ingre_json_files = [
+                                 "data_converted\\checkscm\\beverage_ingredient_masterlist_checkscm.json", 
+                                 "data_converted\\checkscm\\food_ingredient_masterlist_checkscm.json"
+    ]
+
+    excel_checkscm_ingre_files = [
+                                 "data_output\\checkscm\\beverage_ingredient_masterlist_checkscm.xlsx", 
+                                 "data_output\\checkscm\\food_ingredient_masterlist_checkscm.xlsx"
+    ]
+
+    input_checkscm_recipe_json_files = [
+                                 "data_converted\\checkscm\\food_recipe_checkscm.json"
+    ]
+
+    excel_checkscm_recipe_files = [
+                                 "data_output\\checkscm\\food_recipe_checkscm.xlsx"
+    ]
 
     transform_file = "data\menu_sales_analysis_pos.xlsx"
     output_transform_file = "data_converted\\transform\\output_menu_sales_analysis_transformed.xlsx"
 
-    # # Calling the function to convert both Excel files to CSV
+
+    ######################################################################################################
+    ##                                          Appel de fonction                                       ##
+    #######################################################################################################
+
     convert_birchstreet_excel_to_json(beverage_birchstreet_path, ingredient_birchstreet_path, 
                               output_json_birchstreet_beverage_path, output_json_birchstreet_ingredient_path, 
                               header_row_index_beverage, header_row_index_ingredient)
@@ -537,9 +620,33 @@ def main():
     convert_checkscm_excel_to_json(beverage_checkscm_path,ingredient_checkscm_path,recipe_checkscm_path,
                                   output_json_checkscm_beverage_path,output_json_checkscm_ingredient_path,output_json_checkscm_recipe_path)
 
+
+
+    convert_iscala_excel_to_json(file_iscala_paths,output_file__iscala_paths)
+
     process_manual_files(manual_excel_files, output_manual_excel_files)
 
     transform(transform_file,output_transform_file)
+
+    for json_path, excel_path in zip(json_file_iscala_paths, excel_output_iscala_paths):
+        create_excel_from_json_file(json_path, excel_path)
+
+    
+
+    # # Calling the function to convert both Excel files to CSV
+    
+
+    for json_path, excel_path in zip(input_checkscm_ingre_json_files, excel_checkscm_ingre_files):
+        create_excel_checkscm_ingre_from_json_file(json_path, excel_path)
+
+    for json_path, excel_path in zip(input_checkscm_recipe_json_files, excel_checkscm_recipe_files):
+        create_excel_checkscm_recipe_from_json_file(json_path, excel_path)
+    
+
+    for json_path, excel_path in zip(input_manual_json_files, excel_output_manual_files):
+        create_excel_manual_from_json_file(json_path, excel_path)
+
+    
 
     process_birchstreet_files(
         'data\\20231207_client_data\\export from Purchasing software\\BIRCHSTREET (Hotel 1)\\beverage_recipe_birchstreet.xlsx',
